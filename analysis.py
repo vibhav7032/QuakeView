@@ -1,6 +1,8 @@
 # analysis.py
 import pandas as pd
 import numpy as np
+from sklearn.cluster import KMeans 
+from sklearn.preprocessing import StandardScaler
 
 
 def load_and_clean(filepath="earthquake.csv"):
@@ -135,3 +137,36 @@ def filter_df(df, year=None, min_mag=0.0, max_mag=10.0):
         (filtered['mag'] <= max_mag)
     ]
     return filtered
+
+
+# def get_clusters(df, n_clusters=4):
+#     X = df[['latitude', 'longitude', 'depth']]
+#     scaler = StandardScaler()
+#     X_scaled = scaler.fit_transform(X)
+#     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+#     df_clustered = df.copy()
+#     df_clustered['cluster'] = kmeans.fit_predict(X_scaled)
+
+#     return df_clustered
+
+
+
+def get_clusters(df, n_clusters=4):
+    X = df[['latitude', 'longitude', 'depth']]
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    
+    df_clustered = df.copy()
+    raw_clusters = kmeans.fit_predict(X_scaled)
+    df_clustered['raw_cluster'] = raw_clusters
+    
+    # CRITICAL FIX: K-Means assigns random IDs. 
+    # We sort them by average depth so Cluster 0 is ALWAYS the shallowest (Surface)
+    # and Cluster 3 is ALWAYS the deepest (Subduction Zones).
+    cluster_depths = df_clustered.groupby('raw_cluster')['depth'].mean().sort_values()
+    depth_mapping = {old_id: new_id for new_id, old_id in enumerate(cluster_depths.index)}
+    
+    df_clustered['cluster'] = df_clustered['raw_cluster'].map(depth_mapping)
+    
+    return df_clustered
