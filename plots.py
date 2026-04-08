@@ -72,7 +72,7 @@ def plot_yearly_counts(yearly_df):
     ax.set_title("Earthquakes per Year", fontsize=13, fontweight='bold', pad=12)
     ax.set_xlabel("Year", fontsize=10)
     ax.set_ylabel("Number of Earthquakes", fontsize=10)
-    ax.set_xticklabels(years, rotation=45, ha='right', fontsize=8)
+    ax.tick_params(axis='x', labelrotation=45, labelsize=8)
     _apply_dark_style(fig, [ax])
     fig.tight_layout()
     return fig
